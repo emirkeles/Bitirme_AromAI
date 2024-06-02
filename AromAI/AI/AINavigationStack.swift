@@ -10,8 +10,8 @@ import SwiftUI
 struct AiItem: Identifiable {
     var id = UUID()
     var image: String
-    var title: String
-    var content: String
+    var title: LocalizedStringKey
+    var content: LocalizedStringKey
     var navigation: AiNavigation
 }
 
@@ -26,32 +26,7 @@ enum AiNavigation: Hashable {
 
 struct AINavigationStack: View {
     
-    private let items: [AiItem] = [
-        .init(
-            image: "ai-1",
-            title: "Bölgeye Göre",
-            content: "Sevdiğiniz mutfakları seçin ve yapay zeka sizin için tarif önersin!",
-            navigation: .region
-        ),
-        .init(
-            image: "ai-2",
-            title: "Malzemeye göre",
-            content: "Elinizdeki malzemeleri söyleyin, bu malzemeler ile tarif önersin!",
-            navigation: .ingredients
-        ),
-        .init(
-            image: "ai-3",
-            title: "Öğüne Göre",
-            content: "Hangi öğün için yemek yapacağınızı seçmeniz yeterli gerisini yapay zekaya bırakın!",
-            navigation: .meal
-        ),
-        .init(
-            image: "ai-4",
-            title: "Filtreye Göre",
-            content: "Birden çok filtre ile daha özelleştirilmiş tarifler oluşturun!",
-            navigation: .filter
-        )
-    ]
+    private let items: [AiItem] = Constants.aiItems
     
     var body: some View {
         NavigationStack {
@@ -71,9 +46,10 @@ private extension AINavigationStack {
             .font(.title2)
             .fontWeight(.semibold)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
+            .padding([.horizontal, .top])
+            .padding(.top)
         Text("Aşağıdaki seçenekler ile yapay zeka aracınızı kullanarak yeni tarifler oluşturun!")
-            .font(.system(size: 12))
+            .font(.footnote)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.trailing, 100)
@@ -113,7 +89,7 @@ struct AiItemView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
             .frame(height: 180)
-            .foregroundColor(Color(red: 245/255, green: 245/255, blue: 245/255))
+            .foregroundStyle(.thickMaterial)
             .shadow(color: Color(red: 138/255, green: 138/255, blue: 138/255, opacity: 0.25), radius: 6, y: 8)
             .overlay(
                 VStack {
@@ -131,6 +107,15 @@ struct AiItemView: View {
                 }
             )
             .padding(.vertical, 10)
-        
     }
+}
+
+#Preview {
+    AppTabView(selection: .constant(.ai))
+        .preferredColorScheme(.dark)
+}
+
+#Preview {
+    AppTabView(selection: .constant(.ai))
+        .preferredColorScheme(.light)
 }

@@ -15,6 +15,7 @@ struct SignupView: View {
     @Environment(\.userClient) var userClient
     @Binding var path: [AuthenticationRoute]
     @FocusState private var focusedField: Field?
+    @Environment(\.errorAlert) var errorAlert
     
     @State private var nameSurname = ""
     @State private var mail = ""
@@ -34,6 +35,7 @@ struct SignupView: View {
             .offset(y: -60)
             .padding(.horizontal, 30)
             .navigationBarBackButtonHidden()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 leadingToolbarButton
@@ -104,18 +106,23 @@ private extension SignupView {
                         with: .init(
                             name: "Emir",
                             surname: "Keles",
-                            email: "tirtufurko@gufum.com",
-                            userName: "tirtufurko",
-                            password: "123123Ek."
+                            email: mail,
+                            userName: "P@ssw0rd",
+                            password: "P@ssw0rd"
                         )
                     )
+                    nameSurname = ""
+                    mail = ""
+                    password = ""
+                    passwordAgain = ""
+                    await errorAlert.present(AromAIError.success("Hesabınızı aktifleştirmek için e-posta adresinize gönderilen linke tıklayın."), title: "Kayıt olma başarılı")
                     if path.contains(.Signin) {
                         path = path.dropLast()
                     } else {
                         path.append(.Signin)
                     }
                 } catch {
-                    print(error.localizedDescription)
+                    await errorAlert.present(error)
                 }
             }
 

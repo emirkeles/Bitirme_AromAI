@@ -27,7 +27,7 @@ struct RecipeDetailIngredientsView: View {
                         .strikethrough(selectedIngredients.contains(ingredient.name), color: .black)
                         .foregroundStyle(selectedIngredients.contains(ingredient.name) ? .secondary : .primary)
                     Spacer()
-                    Text("\(ingredient.quantity.formatted()) \(ingredient.quantityType)")
+                    Text("\(ingredient.quantity.formatted())  \(ingredient.quantityType)")
                         .strikethrough(selectedIngredients.contains(ingredient.name), color: .black)
                         .foregroundStyle(selectedIngredients.contains(ingredient.name) ? .secondary : .primary)
                 }

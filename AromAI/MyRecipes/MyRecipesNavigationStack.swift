@@ -7,12 +7,11 @@
 
 import SwiftUI
 
-
 struct MyRecipesNavigationStack: View {
-    enum Recipes: String {
-        case recipes = "Tariflerim"
+    enum Recipes: LocalizedStringKey {
+        case recipes = "Tarifler"
         case aiRecipes = "AI Tariflerim"
-        
+        case myRecipes = "Tariflerim"
     }
     @Environment(\.userClient) private var userClient
     @State private var searchText = ""
@@ -20,18 +19,28 @@ struct MyRecipesNavigationStack: View {
     @State private var navigationTitle: Recipes = .recipes
     @StateObject private var debouncedSearchText = DebouncedState(initialValue: "")
     @State var myRecipes = [RecipeResponse.Recipe]()
-    @State var myAıRecipes = [AIRecipe]()
+    @State var allRecipes = [RecipeResponse.Recipe]()
     
-    func getRecipes(searchText: String?) {
+    func getMyRecipes(searchText: String?) {
         Task {
             do {
-                let recipes = try await userClient.getRecipes(searchText: searchText, page: nil, pageSize: nil)
+                let recipes = try await userClient.getMyRecipes(searchText: searchText, page: nil, pageSize: 22)
                 myRecipes = recipes.data
             } catch {
                 print(error.localizedDescription)
             }
         }
-        
+    }
+    
+    func getRecipes(searchText: String?) {
+        Task {
+            do {
+                let recipes = try await userClient.getRecipes(searchText: searchText, page: nil, pageSize: 22)
+                allRecipes = recipes.data
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
     
     var body: some View {
@@ -39,44 +48,42 @@ struct MyRecipesNavigationStack: View {
             ScrollView {
                 Group {
                     if navigationTitle == .recipes {
-                        recipeList()
+                        allRecipeList
+                    } else if navigationTitle == .aiRecipes {
+                        aiRecipeList
                     } else {
-                        aiRecipeList()
+                        recipeList
                     }
                 }
                 .task {
                     getRecipes(searchText: nil)
+                    getMyRecipes(searchText: nil)
                 }
                 .padding(.horizontal)
                 .buttonStyle(.plain)
                 .navigationTitle(navigationTitle.rawValue)
                 .searchable(text: $debouncedSearchText.currentValue, prompt: "Tarif ara...")
                 .textInputAutocapitalization(.never)
-                .onChange(of: debouncedSearchText.debouncedValue) { oldValue, newValue in
+                .onChange(of: debouncedSearchText.debouncedValue) { _, newValue in
                     if navigationTitle == .recipes {
                         getRecipes(searchText: newValue == "" ? nil : newValue)
+                    } else if navigationTitle == .myRecipes {
+                        getMyRecipes(searchText: newValue == "" ? nil : newValue)
                     }
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Menu {
-                            Button {
-                                if navigationTitle == .recipes {
-                                    withAnimation {
-                                        navigationTitle = .aiRecipes
-                                    }
-                                } else {
-                                    withAnimation {
-                                        navigationTitle = .recipes
-                                    }
-                                    
-                                }
-                            } label: {
-                                if navigationTitle == .recipes {
-                                    Label("AI Tariflerim", systemImage: "book")
-                                } else {
-                                    Label("Tariflerim", systemImage: "book.fill")
-                                }
+                            if navigationTitle == .recipes {
+                                aiRecipesButton
+                                myRecipesButton
+                            }
+                            else if navigationTitle == .myRecipes {
+                                aiRecipesButton
+                                recipesButton
+                            } else {
+                                recipesButton
+                                myRecipesButton
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -105,6 +112,8 @@ struct MyRecipesNavigationStack: View {
                 Task {
                     do {
                         try await userClient.getAiRecipes()
+                        getMyRecipes(searchText: nil)
+                        getRecipes(searchText: nil)
                     } catch {
                         print(error.localizedDescription)
                     }
@@ -117,8 +126,46 @@ struct MyRecipesNavigationStack: View {
         }
     }
     
+    private var recipesButton: some View {
+        Button {
+            navigationTitle = .recipes
+        } label: {
+            Label("Tarifler", systemImage: "book")
+        }
+    }
+    
+    private var aiRecipesButton: some View {
+        Button {
+            navigationTitle = .aiRecipes
+        } label: {
+            Label("AI Tariflerim", systemImage: "brain.head.profile")
+                .foregroundStyle(.primaryColor, .primaryColor)
+        }
+    }
+    
+    private var myRecipesButton: some View {
+        Button {
+            navigationTitle = .myRecipes
+        } label: {
+            Label("Tariflerim", systemImage: "book.fill")
+                .foregroundStyle(.primaryColor, .clear)
+        }
+    }
+    
     @ViewBuilder
-    private func recipeList() -> some View {
+    private var allRecipeList: some View {
+        ForEach(allRecipes, id: \.id) { recipe in
+            NavigationLink{
+                RecipeDetailView(recipe: recipe)
+            } label: {
+                RecipeItemView(recipe: recipe)
+            }
+            
+        }
+    }
+    
+    @ViewBuilder
+    private var recipeList: some View {
         ForEach(myRecipes, id: \.id) { recipe in
             NavigationLink {
                 RecipeDetailView(recipe: recipe)
@@ -129,7 +176,7 @@ struct MyRecipesNavigationStack: View {
     }
     
     @ViewBuilder
-    private func aiRecipeList() -> some View {
+    private var aiRecipeList: some View {
         ForEach(filteredAiRecipes, id: \.id) { recipe in
             NavigationLink {
                 AIRecipeDetailView(recipe: recipe)
@@ -146,14 +193,6 @@ struct MyRecipesNavigationStack: View {
             return userClient.myAiRecipes.filter { $0.name.localizedCaseInsensitiveContains(debouncedSearchText.currentValue) }
         }
     }
-    
-//    var filteredRecipes: [RecipeResponse.Recipe] {
-//        if searchText.isEmpty {
-//            return userClient.myRecipes
-//        } else {
-//            return userClient.myRecipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-//        }
-//    }
 }
 
 struct RecipeItemView: View {
@@ -161,24 +200,19 @@ struct RecipeItemView: View {
     
     var body: some View {
         HStack {
-//            AsyncImage(url: URL(string: recipe.imageUrl)!) { image in
-//                image
-//                    .resizable()
-//                    .frame(width: 110, height: 80)
-//                    .cornerRadius(14)
-//            } placeholder: {
-//                RoundedRectangle(cornerRadius: 14)
-//                    .frame(width: 110, height: 80)
-//                    .foregroundStyle(.quinary)
-//                    .overlay {
-//                        ProgressView()
-//                    }
-//            }
-            Image(.yemek6)
-                .resizable()
-                .frame(width: 110, height: 80)
-                .cornerRadius(14)
-            
+            AsyncImage(url: URL(string: recipe.imageUrl ?? "https://blobcontainerapposite.blob.core.windows.net/mediafiles/mediafiles/079ae404-2049-4a7f-a64a-c1f468d950d0.png")!) { image in
+                image
+                    .resizable()
+                    .frame(width: 110, height: 80)
+                    .cornerRadius(14)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 14)
+                    .frame(width: 110, height: 80)
+                    .foregroundStyle(.quinary)
+                    .overlay {
+                        ProgressView()
+                    }
+            }
             VStack(alignment: .leading) {
                 Text(recipe.title)
                     .fontWeight(.medium)
@@ -186,22 +220,6 @@ struct RecipeItemView: View {
                     .font(.footnote)
                     .lineLimit(2)
                     .foregroundStyle(.secondary)
-//                HStack {
-//                    Text(recipe.difficulty.rawValue)
-//                        .font(.system(size: 10))
-//                        .padding(.horizontal, 5)
-//                        .padding(.vertical, 2)
-//                        .foregroundStyle(Color(red: 0, green: 152/255, blue: 121/255))
-//                        .background(Color(red: 0, green: 152/255, blue: 121/255, opacity: 0.15))
-//                        .cornerRadius(2.5)
-//                    Text(recipe.interval)
-//                        .font(.system(size: 10))
-//                        .padding(.horizontal, 5)
-//                        .padding(.vertical, 2)
-//                        .foregroundStyle(Color(red: 255/255, green: 193/255, blue: 7/255))
-//                        .background(Color(red: 255/255, green: 193/255, blue: 7/255, opacity: 0.15))
-//                        .cornerRadius(2.5)
-//                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
@@ -215,19 +233,6 @@ struct AIRecipeItemView: View {
     
     var body: some View {
         HStack {
-//            AsyncImage(url: URL(string: recipe.imageUrl)!) { image in
-//                image
-//                    .resizable()
-//                    .frame(width: 110, height: 80)
-//                    .cornerRadius(14)
-//            } placeholder: {
-//                RoundedRectangle(cornerRadius: 14)
-//                    .frame(width: 110, height: 80)
-//                    .foregroundStyle(.quinary)
-//                    .overlay {
-//                        ProgressView()
-//                    }
-//            }
             Image(.yemek6)
                 .resizable()
                 .frame(width: 110, height: 80)
@@ -240,22 +245,6 @@ struct AIRecipeItemView: View {
                     .font(.footnote)
                     .lineLimit(2)
                     .foregroundStyle(.secondary)
-//                HStack {
-//                    Text(recipe.difficulty.rawValue)
-//                        .font(.system(size: 10))
-//                        .padding(.horizontal, 5)
-//                        .padding(.vertical, 2)
-//                        .foregroundStyle(Color(red: 0, green: 152/255, blue: 121/255))
-//                        .background(Color(red: 0, green: 152/255, blue: 121/255, opacity: 0.15))
-//                        .cornerRadius(2.5)
-//                    Text(recipe.interval)
-//                        .font(.system(size: 10))
-//                        .padding(.horizontal, 5)
-//                        .padding(.vertical, 2)
-//                        .foregroundStyle(Color(red: 255/255, green: 193/255, blue: 7/255))
-//                        .background(Color(red: 255/255, green: 193/255, blue: 7/255, opacity: 0.15))
-//                        .cornerRadius(2.5)
-//                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }

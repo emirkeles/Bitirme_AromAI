@@ -13,7 +13,9 @@ struct RecipeDetailSummaryView: View {
     var body: some View {
         VStack {
             Text(recipe.description)
-            RecipeDetailSummaryBox(interval: "\(recipe.preparationTime)", calory: "\(recipe.calories)", region: recipe.cuisinePreference.name)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
+            RecipeDetailSummaryBox(interval: "\(recipe.preparationTime)", calory: "\(recipe.calories.formatted())", region: recipe.cuisinePreference.name)
         }
         
     }

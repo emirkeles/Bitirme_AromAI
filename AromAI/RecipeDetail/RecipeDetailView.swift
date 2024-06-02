@@ -15,33 +15,39 @@ struct RecipeDetailView: View {
     var staticUrl = "https://blobcontainerapposite.blob.core.windows.net/mediafiles/mediafiles/079ae404-2049-4a7f-a64a-c1f468d950d0.png"
     
     var body: some View {
+        ScrollView {
         VStack {
             AsyncImage(url: URL(string: recipe.imageUrl ?? staticUrl)!) { image in
                 image
                     .resizable()
-                    .frame(height: 240)
+                    .frame(width: UIScreen.main.bounds.width * 0.94, height: 220)
                     .scaledToFit()
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .shadow(radius: 4)
+                
             } placeholder: {
-                Rectangle()
+                RoundedRectangle(cornerRadius: 6)
                     .foregroundStyle(.tertiary)
-                    .frame(height: 240)
+                    .frame(width: UIScreen.main.bounds.width * 0.94, height: 220)
+                    .overlay {
+                        ProgressView()
+                    }
             }
             .padding(.bottom)
             Text(recipe.title)
                 .fontWeight(.medium)
                 .font(.title3)
                 .padding(.bottom)
+                .padding(.horizontal)
             Divider()
             
                 CapsulePicker(selectedIndex: $selectedSegment, titles: ["Özet", "Malzemeler", "Yapılışı"])
                     .padding()
                     .padding(.horizontal, 15)
-            ScrollView {
+            
                 switch selectedSegment {
                 case 0:
                     RecipeDetailSummaryView(recipe: recipe)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 30)
                 case 1:
                     RecipeDetailIngredientsView(recipe: recipe)
                         .frame(maxWidth: .infinity)
@@ -53,6 +59,7 @@ struct RecipeDetailView: View {
                 }
             }
             .scrollIndicators(.hidden)
+            .navigationBarTitleDisplayMode(.inline)
         }
         .contentMargins(.bottom, .bottomTabHeight)
     }

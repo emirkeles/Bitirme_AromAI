@@ -26,11 +26,10 @@ struct LoginView: View {
                     .scaledToFit()
                     .frame(width: 300)
                 Group {
-                    Text("Kendi evinin").font(.title) +
-                    Text(" şefi ").font(.title).foregroundStyle(.primaryColor) +
-                    Text("olmaya hazır mısın?").font(.title)
-                    Text("Yeni lezzetlere adım atmak için kayıt ol veya hesabın varsa giriş yap!").multilineTextAlignment(.center).foregroundStyle(.secondary).font(.footnote)
+                    Text("Kendi evinin şefi olmaya hazır mısın?").font(.title)
+                    Text("Yeni lezzetlere adım atmak için kayıt ol veya hesabın varsa giriş yap!").foregroundStyle(.secondary).font(.footnote)
                 }
+                .padding(.horizontal)
                 .multilineTextAlignment(.center)
                 
                 CustomButton(action: {navigationPath.append(.Signup)}) {
@@ -60,4 +59,8 @@ struct LoginView: View {
             }
         }
     }
+}
+
+#Preview {
+    LoginView()
 }

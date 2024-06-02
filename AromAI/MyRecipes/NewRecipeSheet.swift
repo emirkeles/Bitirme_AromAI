@@ -15,7 +15,7 @@ struct RecipeForm: Codable {
     var description: String = ""
     var preparationTime: String = "0"
     var calories: String = "0"
-    var cuisinePreferenceId = "00e9d64a-510d-400e-87db-681ce9ff014b"
+    var cuisinePreferenceId = ""
     var recipeSteps: [RecipeStep] = []
     var recipeIngredients: [SheetIngredient] = []
 }
@@ -28,11 +28,9 @@ struct NewRecipeSheet: View {
     @State private var jpegData: Data?
     @Environment(\.dismiss) private var dismiss
     @State var recipeForm = RecipeForm()
-    @State private var region = "Türkiye"
     @State private var selectedIngredient: RecipeIngredient?
     @State private var openSheet = false
     @State private var malzemeler = [NewRecipeIngredient]()
-    
     @Binding var sheetPresentation: Bool
     
     var body: some View {
@@ -53,7 +51,7 @@ struct NewRecipeSheet: View {
                     VStack {
                         Text("2")
                             .frame(width: 28, height: 28)
-                            .background(Color(Color(red: 244/255, green: 244/255, blue: 244/255)), in: Circle())
+                            .background(.thinMaterial, in: Circle())
                         Text("Aşamalar")
                             .font(.caption2)
                     }
@@ -97,7 +95,7 @@ struct NewRecipeSheet: View {
                     .frame(width: 350, height: 200)
                     .background(RoundedRectangle(cornerRadius: 10).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [3])))
                 }
-                .background(Color(red: 244/255, green: 244/255, blue: 244/255))
+                .background(.thinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .buttonStyle(.plain)
                 .padding()
@@ -112,18 +110,20 @@ struct NewRecipeSheet: View {
                 TextField("Yemek ismini giriniz...", text: $recipeForm.title)
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: 6).foregroundStyle(Color(red: 244/255, green: 244/255, blue: 244/255))
+                        RoundedRectangle(cornerRadius: 6)
+                            .foregroundStyle(.thinMaterial)
                     )
                     .padding([.horizontal, .bottom])
                 Text("Yemek Açıklaması")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading)
-                TextField("Yemek açıklamasını ismini giriniz...", text: $recipeForm.description, axis: .vertical)
+                TextField("Yemek açıklamasını giriniz...", text: $recipeForm.description, axis: .vertical)
                     .multilineTextAlignment(.leading)
                     .lineLimit(2...4)
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: 6).foregroundStyle(Color(red: 244/255, green: 244/255, blue: 244/255))
+                        RoundedRectangle(cornerRadius: 6)
+                            .foregroundStyle(.thinMaterial)
                     )
                     .padding([.horizontal, .bottom])
                 
@@ -133,33 +133,33 @@ struct NewRecipeSheet: View {
                         TextField("Süre", text: $recipeForm.preparationTime)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.center)
-                            .frame(width: 100, height: 40)
-                            .background(Color(Color(red: 244/255, green: 244/255, blue: 244/255)), in: RoundedRectangle(cornerRadius: 6))
+                            .frame(width: 100, height: 50)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
                     }
-                    
                     Spacer()
                     VStack {
                         Text("Kalori")
                         TextField("Kalori", text: $recipeForm.calories)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.center)
-                            .frame(width: 100, height: 40)
-                            .background(Color(Color(red: 244/255, green: 244/255, blue: 244/255)), in: RoundedRectangle(cornerRadius: 6))
+                            .frame(width: 100, height: 50)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
                     }
                     Spacer()
-                    
                     VStack {
                         Text("Bölge")
-                        Picker("Bölge", selection: $region) {
-                            Text("Türkiye")
-                                .tag("Türkiye")
+                        Picker("Bölge", selection: $recipeForm.cuisinePreferenceId) {
+                            ForEach(userClient.allCuisines) { cuisine in
+                                Text(cuisine.name)
+                                    .tag(cuisine.id)
+                            }
                         }
-                        .frame(width: 100, height: 40)
-                        .background(Color(Color(red: 244/255, green: 244/255, blue: 244/255)), in: RoundedRectangle(cornerRadius: 6))
+                        .frame(width: 120, height: 50)
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
                     }
-                    
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
                 .padding(.horizontal)
                 
                 HStack {
@@ -272,14 +272,6 @@ struct NewRecipeSheet: View {
     }
 }
 
-
-//#Preview {
-//    NavigationStack {
-//        NewRecipeSheet()
-//            .navigationTitle("Yeni Tarif Oluştur")
-//    }
-//}
-
 struct IngredientPicker: View {
     @Binding var ingredients: [NewRecipeIngredient]
     @Environment(\.dismiss) private var dismiss
@@ -339,7 +331,6 @@ struct IngredientPicker: View {
                                 ingredientId: selectedId,
                                 quantityType: ingredientQuantityType,
                                 quantity: Double(ingredientQuantity)!
-                                
                             )
                         )
                         dismiss()
@@ -362,9 +353,7 @@ struct IngredientPicker: View {
                 fetchIngredients(searchText: newValue == "" ? nil : newValue)
             }
             .navigationTitle("Malzeme Ekle")
-            
         }
-        
     }
     
     private func fetchIngredients(searchText: String?) {
@@ -436,7 +425,8 @@ struct SecondPage: View {
                                 selectedStep = tempSteps[index]
                             }
                         } label: {
-                            Text("\(selectedStep?.stepNumber == tempSteps[index].stepNumber ? "Adım" : "") \(tempSteps[index].stepNumber)")
+                            let step = NSLocalizedString("Adım", comment: "")
+                            Text("\(selectedStep?.stepNumber == tempSteps[index].stepNumber ? step : "") \(tempSteps[index].stepNumber)")
                                 .padding(.horizontal, 4)
                                 .font(.caption)
                                 .fontWeight(.semibold)
@@ -457,7 +447,8 @@ struct SecondPage: View {
                         .lineLimit(4...6)
                         .padding()
                         .background(
-                            RoundedRectangle(cornerRadius: 6).foregroundStyle(Color(red: 244/255, green: 244/255, blue: 244/255))
+                            RoundedRectangle(cornerRadius: 6)
+                                .foregroundStyle(.thinMaterial)
                         )
                         .padding([.horizontal, .bottom])
                 }
@@ -493,13 +484,12 @@ struct SecondPage: View {
                             coverPhotoId: recipeForm.coverPhotoId,
                             title: recipeForm.title,
                             description: recipeForm.description,
-                            preparationTime: Double(recipeForm.preparationTime)!,
-                            calories: Double(recipeForm.calories)!,
+                            preparationTime: Double(recipeForm.preparationTime) ?? 0,
+                            calories: Double(recipeForm.calories) ?? 0,
                             cuisinePreferenceId: recipeForm.cuisinePreferenceId,
                             recipeSteps: recipeForm.recipeSteps,
                             recipeIngredients: recipeForm.recipeIngredients
                         )
-                        print(recipeForm.recipeIngredients)
                         try await userClient.createRecipe(recipe: requestForm)
                         sheetPresentation = false
                     } catch {
@@ -513,49 +503,4 @@ struct SecondPage: View {
             .frame(height: 60, alignment: .top)
         }
     }
-}
-
-//#Preview {
-//    SecondPage( recipeForm: .constant(.init())
-//    )
-//}
-
-struct Ingredient: Identifiable, Hashable {
-    let id = UUID()
-    var name: String
-    var quantity: String
-}
-
-struct MediaResponse: Decodable {
-    struct Data: Codable {
-        let id: String
-    }
-    let data: Data
-}
-
-struct NewIngredient {
-    let id: String
-    let name: String
-}
-
-struct SheetIngredient: Codable {
-    let ingredientId: String
-    let quantityType: String
-    let quantity: Double
-}
-
-struct NewRecipeIngredient: Codable, Hashable {
-    var ingredientId: String
-    var name: String
-    var quantity: Double
-    var quantityType: String
-    
-}
-
-
-struct TempSteps: Identifiable, Equatable {
-    var description: String
-    var stepNumber: Int
-    
-    var id = UUID()
 }

@@ -18,28 +18,14 @@ struct SlideCardView: View {
                 .scaledToFit()
             
             HStack(alignment: .firstTextBaseline) {
-                let words = slide.title.split(separator: " ")
-                let firstTwo = words.prefix(2).joined(separator: " ")
-                let remaining = words.dropFirst(2).joined(separator: " ")
-                Text(firstTwo).foregroundStyle(.primaryColor) +
-                Text(" \(remaining)")
-                    
-            }
+                Text(slide.title)
+                }
             .multilineTextAlignment(.center)
             .padding(.horizontal, 30)
             .frame(maxWidth: 480)
             .font(.largeTitle)
             .fontWeight(.regular)
-//            Button(action: action) {
-//                Text(slide.buttonText)
-//                    .font(.system(size: 17, weight: .medium, design: .default))
-//                    .padding()
-//                    .foregroundStyle(.white)
-//                    .frame(width: 250)
-//                    .background(.primaryColor)
-//                    .clipShape(.buttonBorder)
-//                
-//            }
+            
             CustomButton {
                 action()
             } content: {

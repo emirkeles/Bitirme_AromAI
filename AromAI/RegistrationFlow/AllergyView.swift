@@ -55,7 +55,7 @@ struct AllergyView: View {
                 userClient.ingredients = selectedAllergies
                 navigationPath.append(.diet)
             }, label: {
-                Text("Sonraki Adım")
+                Text("Sonraki")
                     .font(.system(size: 17, weight: .medium, design: .default))
                     .padding()
                     .foregroundStyle(.white)
@@ -128,9 +128,9 @@ private extension AllergyView {
             HStack {
                 ForEach(1...3, id: \.self) { step in
                     Circle()
-                        .stroke(step == 1 ? Color.red : Color.gray, lineWidth: 1)
+                        .stroke(step == 1 ? .primaryColor : .secondary, lineWidth: 1)
                         .frame(width: 20, height: 20)
-                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 1 ? .red : .gray))
+                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 1 ? .primaryColor : .secondary))
                 }
             }
         }

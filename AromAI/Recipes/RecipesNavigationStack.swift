@@ -7,9 +7,11 @@
 
 import SwiftUI
 
+
+
 struct RecipesNavigationStack: View {
     @Environment(\.userClient) var userClient
-    @State private var recipeOfTheWeek: RecipeResponse.Recipe? = nil
+    @Environment(\.errorAlert) var errorAlert
     @State var searchText: String = ""
     @State private var recipes: [RecipeResponse.Recipe] = []
     
@@ -31,10 +33,9 @@ struct RecipesNavigationStack: View {
     
     func fetchData() async {
         do {
-            let response = try await userClient.getRecipes(searchText: nil, page: nil, pageSize: nil)
-            let aiResponse = try await userClient.getAiRecipes()
-            try await userClient.getPersonalInfo()
-            recipeOfTheWeek = response.data[3]
+            try await userClient.getRecipes(searchText: nil, page: nil, pageSize: 22)
+            try await userClient.getAiRecipes()
+//            try await userClient.getCuisines(searchText: nil, page: nil, pageSize: nil)
         } catch {
             print(error.localizedDescription)
         }
@@ -45,12 +46,12 @@ extension RecipesNavigationStack {
     
     var header: some View {
         HStack {
-            Image(.efsanevi)
-                .resizable()
-                .frame(width: 50, height: 50)
+            Image(systemName: "person")
+                .font(.title)
+                .foregroundStyle(.primaryColor)
             VStack(alignment: .leading) {
                 Text("Merhaba ").font(.headline) +
-                Text("Mustafa, ")
+                Text(UserDefaults.standard.string(forKey: "name") ?? "")
                     .foregroundStyle(.primaryColor)
                     .font(.headline)
                 Text("Bugün hangi yemeği yapmak istersin?")
@@ -73,7 +74,7 @@ extension RecipesNavigationStack {
     
     
     var mealOfTheWeek: some View {
-        MealOfTheWeekView(food: recipeOfTheWeek)
+        MealOfTheWeekView()
             .padding(.horizontal, 12)
     }
     @ViewBuilder
@@ -81,7 +82,7 @@ extension RecipesNavigationStack {
         Section {
             ScrollView(.horizontal) {
                 LazyHGrid(rows: [.init()]) {
-                    ForEach(userClient.myRecipes.prefix(6)) { recipe in
+                    ForEach(userClient.allRecipes.prefix(12)) { recipe in
                         FoodItemView(recipe: recipe)
                     }
                 }
@@ -102,7 +103,7 @@ extension RecipesNavigationStack {
         Section {
             ScrollView(.horizontal) {
                 LazyHGrid(rows: [.init()]) {
-                    ForEach(                    userClient.myRecipes.prefix(6)) { recipe in
+                    ForEach(userClient.allRecipes.reversed().prefix(12)) { recipe in
                         FoodItemView(recipe: recipe)
                     }
                 }
@@ -171,7 +172,7 @@ struct FoodItemView: View {
 
 
 struct CategoryView: View {
-    var title: String
+    var title: LocalizedStringKey
     var image: String
     var body: some View {
         RoundedRectangle(cornerRadius: 6)
@@ -190,4 +191,6 @@ struct CategoryView: View {
                 }
             )
     }
+    
+
 }

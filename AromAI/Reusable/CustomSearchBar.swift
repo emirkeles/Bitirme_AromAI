@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CustomSearchBar: View {
     @Binding var text: String
-    var prompt: String
+    var prompt: LocalizedStringKey
     @State private var showCancelButton = false
     @State private var isTextEmpty = true
     @State private var offset: CGFloat = 0
@@ -18,8 +18,9 @@ struct CustomSearchBar: View {
             HStack {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                    TextField("", text: $text, prompt: Text(prompt).foregroundStyle(Color(red: 144/255, green: 144/255, blue: 148/255)))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.tertiary)
+                    TextField("", text: $text, prompt: Text(prompt).foregroundStyle(.secondary))
+                        
                     Button(action: {
                         self.text = ""
                     }) {
@@ -31,7 +32,7 @@ struct CustomSearchBar: View {
                 .foregroundStyle(.secondary)
                 .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .foregroundStyle(Color(red: 241/255, green: 241/255, blue: 242/255))
+                    .foregroundStyle(.ultraThickMaterial)
                 
                 )
                 

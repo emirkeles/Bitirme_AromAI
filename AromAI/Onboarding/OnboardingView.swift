@@ -38,14 +38,14 @@ struct OnboardingView: View {
                 }) {
                     Group {
                         Text("Tanıtımı geç")
-                            .foregroundStyle(Color(red: 175/255, green: 175/255, blue: 175/255))
+                            .foregroundStyle(.secondary)
                         Image(systemName: "chevron.forward")
-                            .foregroundStyle(Color(red: 175/255, green: 175/255, blue: 175/255))
+                            .foregroundStyle(.secondary)
                             .offset(y: 1)
                     }
                     .frame(height: 40, alignment: .center)
-                    
                 }
+                .buttonStyle(.plain)
                 .padding(.trailing, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
@@ -57,6 +57,6 @@ struct OnboardingView: View {
     }
     func setupAppearance() {
         UIPageControl.appearance().currentPageIndicatorTintColor = UIColor(red: 234/255, green: 109/255, blue: 109/255, alpha: 1.0)
-        UIPageControl.appearance().pageIndicatorTintColor = UIColor.black.withAlphaComponent(0.2)
+        UIPageControl.appearance().pageIndicatorTintColor = UIColor(.secondary)
     }
 }

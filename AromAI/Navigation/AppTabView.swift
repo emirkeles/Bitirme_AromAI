@@ -40,7 +40,7 @@ struct AppTabView: View {
 }
 
 extension AppTabView {
-    func CustomTabItem(imageName: String, title: String, isActive: Bool) -> some View{
+    func CustomTabItem(imageName: String, title: LocalizedStringKey, isActive: Bool) -> some View{
         HStack(spacing: 10){
             Image(systemName: imageName)
                 .resizable()

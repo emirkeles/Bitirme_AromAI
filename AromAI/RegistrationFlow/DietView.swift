@@ -61,7 +61,7 @@ struct DietView: View {
                 Button(action: {
                     navigationPath.removeLast()
                 }, label: {
-                    Text("Önceki Adım")
+                    Text("Önceki")
                         .font(.system(size: 17, weight: .medium, design: .default))
                         .padding()
                         .frame(maxWidth: .infinity)
@@ -73,7 +73,7 @@ struct DietView: View {
                     userClient.diseases = selectedDiets
                     navigationPath.append(.likedCountry)
                 }, label: {
-                    Text("Sonraki Adım")
+                    Text("Sonraki")
                         .font(.system(size: 17, weight: .medium, design: .default))
                         .padding()
                         .foregroundStyle(.white)
@@ -171,9 +171,9 @@ private extension DietView {
             HStack {
                 ForEach(1...3, id: \.self) { step in
                     Circle()
-                        .stroke(step == 2 ? Color.red : Color.gray, lineWidth: 1)
+                        .stroke(step == 2 ? .primaryColor : .secondary, lineWidth: 1)
                         .frame(width: 20, height: 20)
-                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 2 ? .red : .gray))
+                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 2 ? .primaryColor : .secondary))
                 }
             }
         }

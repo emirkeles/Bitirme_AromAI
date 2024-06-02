@@ -9,36 +9,37 @@ import SwiftUI
 
 struct SigninView: View {
     @Environment(\.userClient) var userClient
+    @Environment(\.errorAlert) var errorAlert
     @Environment(\.dismiss) var dismiss
     @Binding var path: [AuthenticationRoute]
     @FocusState private var focusedField: Field?
-    
     @State private var mail = ""
     @State private var password = ""
-    @State private var forgotPassword = false
-    @State private var presentingForgotPassword = false
     @AppStorage("loggedIn") var loggedIn: Bool?
     
+    enum Field: Hashable {
+        case mail, password
+    }
+    
     var body: some View {
-        VStack(alignment: .center) {
-            headerImage
-            headerText
-            signupForm
-            signinButton
-            dontHaveAccountButton
+        ScrollView {
+            VStack(alignment: .center) {
+                headerImage
+                headerText
+                signupForm
+                signinButton
+                dontHaveAccountButton
+            }
+            .padding(.horizontal, 30)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .navigationBarBackButtonHidden()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                leadingToolbarButton
+                keyboardToolbarButton
+            }
         }
-        .padding(.horizontal, 30)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            leadingToolbarButton
-            keyboardToolbarButton
-        }
-        .sheet(isPresented: $presentingForgotPassword) {
-            ForgotPasswordSheet()
-        }
-        
-        
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -75,35 +76,27 @@ private extension SigninView {
             .textContentType(.password)
             .focused($focusedField, equals: .password)
             .onSubmit {
-                print("giriş yap")
+                login()
+                focusedField = nil
             }
     }
     
-    var forgotPasswordButton: some View {
-        Button(action: {presentingForgotPassword = true}, label: {
-            Text("Şifremi Unuttum")
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
-        })
-        .buttonStyle(.plain)
-        .padding(.vertical, 5)
+    func login() {
+        Task {
+            do {
+                try await userClient.login(with: .init(email: mail, password: password))
+                focusedField = nil
+                userClient.updateValidation(success: true)
+                loggedIn = true
+            } catch {
+                await errorAlert.present(AromAIError.custom)
+            }
+        }
     }
     
     var signinButton: some View {
-        @Environment(\.errorAlert) var errorAlert
-        return CustomButton {
-            Task {
-                do {
-                    try await userClient.login(with: .init(email: "admin@admin.com", password: "P@ssw0rd"))
-                    
-                } catch {
-                    await errorAlert.present(AromAIError.custom)
-                }
-                userClient.updateValidation(success: true)
-                loggedIn = true
-            }
-            
-            
+        CustomButton {
+            login()
         } content: {
             Text("Giriş Yap")
         }
@@ -151,9 +144,4 @@ private extension SigninView {
         }
     }
 }
-// MARK: - Field enum
-private extension SigninView {
-    enum Field: Hashable {
-        case mail, password
-    }
-}
+

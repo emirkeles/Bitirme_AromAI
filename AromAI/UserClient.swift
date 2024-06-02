@@ -8,30 +8,12 @@
 import Foundation
 import SwiftUI
 
-final class DebouncedState<Value>: ObservableObject {
-    @Published var currentValue: Value
-    @Published var debouncedValue: Value
-    
-    init(initialValue: Value, delay: Double = 0.3) {
-        _currentValue = Published(initialValue: initialValue)
-        _debouncedValue = Published(initialValue: initialValue)
-        $currentValue
-            .debounce(for: .seconds(delay), scheduler: RunLoop.main)
-            .assign(to: &$debouncedValue)
-    }
-}
-
-struct PersonalInfoRequest: Codable {
-    let ingredients: [String]
-    let cuisines: [String]
-    let healths: [String]
-}
-
 enum Endpoint {
     case login
     case register
     case createRecipe(recipe: RecipeCreationRequest)
     case getRecipes(searchText: String?, page: Int?, pageSize: Int?)
+    case getMyRecipes(searchText: String?, page: Int?, pageSize: Int?)
     case getPersonalInfo
     case addPersonalInfo(person: PersonalInfoRequest)
     case createAIRecipe(aiRecipe: AIRecipeCreationRequest)
@@ -63,6 +45,8 @@ enum Endpoint {
         case .register:
             return "/Auth/register"
         case .getRecipes:
+            return "/Recipe/get"
+        case .getMyRecipes:
             return "/Recipe/getMyRecipes"
         case .createRecipe:
             return "/Recipe/create"
@@ -81,11 +65,11 @@ enum Endpoint {
         case .getHealth:
             return "/Health/get"
         case .createHealth:
-           return "/Health/create"
+            return "/Health/create"
         case .getCuisine:
-           return "/CuisinePreference/get"
+            return "/CuisinePreference/get"
         case .createCuisine:
-           return "/CuisinePreference/create"
+            return "/CuisinePreference/create"
         case .upload:
             return "/MediaFile/upload"
         default:
@@ -103,7 +87,8 @@ enum Endpoint {
         case .getIngredient(let searchText, let page, let pageSize),
                 .getHealth(let searchText, let page, let pageSize),
                 .getCuisine(let searchText, let page, let pageSize),
-                .getRecipes(let searchText, let page, let pageSize):
+                .getRecipes(let searchText, let page, let pageSize),
+                .getMyRecipes(let searchText, let page, let pageSize):
             var queryItemList = [URLQueryItem]()
             if let searchText {
                 queryItemList.append(URLQueryItem(name: "SearchText", value: searchText))
@@ -124,20 +109,6 @@ enum Endpoint {
         var components = URLComponents(string: Endpoint.baseUrl + self.path)
         components?.queryItems = self.queryItems
         return components?.url
-}
-    
-    var Url: URL? {
-        switch self {
-        case .getRecipes(let searchText, let page, let pageSize):
-            let urlString = Endpoint.baseUrl + self.path + "?SearchText=\(String(describing: searchText))?Page=\(String(describing: page))&PageSize=\(String(describing: pageSize))"
-            return URL(string: urlString)
-        case .getAIRecipes(let page, let pageSize):
-            let urlString = Endpoint.baseUrl + self.path + "?Page=\(page)&PageSize=\(pageSize)"
-            return URL(string: urlString)
-        default:
-            return URL(string: Endpoint.baseUrl + self.path)
-        }
-        
     }
 }
 
@@ -145,7 +116,8 @@ enum NetworkError: LocalizedError {
     case invalidResponse
     case decodingError
     case urlError
-    var errorDescription: String? {
+    
+    var errorDescription: LocalizedStringKey {
         switch self {
         case .decodingError:
             return "Decode Hatası"
@@ -156,85 +128,6 @@ enum NetworkError: LocalizedError {
         }
     }
 }
-
-
-struct PersonalInfo: Codable {
-    let data: Data
-    
-    struct Data: Codable {
-        let ingredients: [RecipeIngredient]
-        let cuisines: [RecipeCuisine]
-        let healths: [RecipeHealth]
-    }
-}
-
-struct MediaRequest: Codable {
-    enum FileType: String, Codable {
-        case RecipeImage = "RecipeImage"
-        case UserProfileImage = "UserProfileImage"
-        case IngredientImage = "IngredientImage"
-    }
-    let jpegData: Data
-    let mediaName: String
-    let fileType: FileType
-}
-
-struct RecipeCreationRequest: Codable {
-    let coverPhotoId: String?
-    let title: String?
-    let description: String?
-    let preparationTime: Double
-    let calories: Double
-    let cuisinePreferenceId: String
-    let recipeSteps: [RecipeStep]
-    let recipeIngredients: [SheetIngredient]
-}
-
-struct AIRecipeCreationRequest: Codable {
-    let cuisine: String?
-    let mealType: String?
-    let includedIngredients: [String]?
-    let excludedIngredients: [String]?
-    let health: [String]?
-    var language = "Turkish"
-}
-
-struct RecipeStep: Codable {
-    let description: String
-    let stepNumber: Int
-}
-
-struct AIRecipeCreationResponse: Codable {
-    let data: RecipeData
-    
-    struct RecipeData: Codable {
-        let userId: String
-        let name: String
-        let description: String
-        let aiInstructions: [RecipeStep]
-        let preparationTime: Double
-        let servings: Int
-        let calories: Double
-        let protein: Double
-        let fat: Double
-        let carbohydrates: Double
-        let aiIngredients: [AIRecipeIngredient]
-    }
-}
-
-struct AIRecipeIngredient: Codable {
-    let name: String
-    let description: String
-    let calories: Double
-    let protein: Double
-    let fat: Double
-    let carbohydrates: Double
-    let quantityType: String
-    let quantity: Double
-}
-
-
-
 
 @Observable
 class UserClient {
@@ -247,10 +140,31 @@ class UserClient {
         }
     }
     var refreshToken: String?
+    var useMyInfo: Bool = false
+    var name: String = ""
+    var email: String = ""
+    
+    var allRecipes: [RecipeResponse.Recipe] = []
     var myRecipes: [RecipeResponse.Recipe] = []
     var ingredients: [RecipeIngredient] = []
     var diseases: [RecipeHealth] = []
     var cuisines: [RecipeCuisine] = []
+    var allCuisines: [RecipeCuisine] = []
+    
+    
+    var cuisine: String? {
+        cuisines.first?.name ?? nil
+    }
+    var diseasesNames: [String] {
+        diseases.map { disease in
+            disease.name
+        }
+    }
+    var ingredientsNames: [String] {
+        ingredients.map { ingredient in
+            ingredient.name
+        }
+    }
     var ingredientsIds: [String] {
         ingredients.map { ingredient in
             ingredient.id
@@ -266,10 +180,13 @@ class UserClient {
             cuisine.id
         }
     }
+    var allCuisinesIds: [String] {
+        allCuisines.map { cuisine in
+            cuisine.id
+        }
+    }
     var myAiRecipes: [AIRecipe] = []
     var allIngredients = [RecipeIngredient]()
-    
-    
     
     var isValidated = false
     
@@ -278,20 +195,7 @@ class UserClient {
             isValidated = success
         }
     }
-    
-    
-    
-    struct RegisterResponse: Codable {
-        struct innerRegisterResponse: Codable {
-            let id: String
-            let name: String
-            let surname: String
-            let email: String
-            let role: String
-        }
-        
-        let data: innerRegisterResponse
-    }
+
     
     func getPersonalInfo() async throws{
         let endPoint = Endpoint.getPersonalInfo
@@ -307,7 +211,7 @@ class UserClient {
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
         }
-
+        
         do {
             let personalInfo = try JSONDecoder().decode(PersonalInfo.self, from: data)
             ingredients = personalInfo.data.ingredients
@@ -332,8 +236,8 @@ class UserClient {
         request.httpBody = try JSONEncoder().encode(recipe)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(response)
-        print(data)
+        
+        
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
@@ -341,7 +245,6 @@ class UserClient {
         
         do {
             let recipeResponse = try JSONDecoder().decode(AIRecipeCreationResponse.self, from: data)
-            print(recipeResponse.data)
             try await getAiRecipes()
             return recipeResponse
         } catch {
@@ -383,10 +286,35 @@ class UserClient {
         request.httpBody = try JSONEncoder().encode(recipe)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse, (200...210).contains(httpResponse.statusCode) else {
             throw NetworkError.invalidResponse
+        }
+    }
+    
+    func getMyRecipes(searchText: String?, page: Int?, pageSize: Int?) async throws -> RecipeResponse {
+        let endPoint = Endpoint.getMyRecipes(searchText: searchText, page: page, pageSize: pageSize)
+        
+        guard let url = endPoint.url else {
+            throw NetworkError.urlError
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(bearerToken ?? "")", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = endPoint.method
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        do {
+            let recipeResponse = try JSONDecoder().decode(RecipeResponse.self, from: data)
+            myRecipes = recipeResponse.data
+            return recipeResponse
+        } catch {
+            throw NetworkError.decodingError
         }
     }
     
@@ -409,9 +337,7 @@ class UserClient {
         }
         do {
             let recipeResponse = try JSONDecoder().decode(RecipeResponse.self, from: data)
-            myRecipes = recipeResponse.data
-            print(myRecipes.count)
-            print("yeni veriler eklendi")
+            allRecipes = recipeResponse.data
             return recipeResponse
         } catch {
             throw NetworkError.decodingError
@@ -461,7 +387,7 @@ class UserClient {
         
         do {
             let myResponse = try JSONDecoder().decode(GenericResponse<RecipeCuisine>.self, from: data)
-            
+            self.allCuisines = myResponse.data
             return myResponse.data
         } catch {
             throw NetworkError.decodingError
@@ -480,7 +406,6 @@ class UserClient {
         request.httpMethod = endPoint.method
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(response)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
         }
@@ -508,21 +433,19 @@ class UserClient {
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
         }
-        print(response)
         do {
             let aiRecipeResponse = try JSONDecoder().decode(AIRecipeData.self, from: data)
             myAiRecipes = aiRecipeResponse.data
-            print("ai tarifleri eklendi")
             return aiRecipeResponse
         } catch {
             throw NetworkError.decodingError
         }
     }
-
+    
     
     func register(with info: Register) async throws {
         let endPoint = Endpoint.register
-        guard let url = endPoint.Url else { throw NetworkError.urlError }
+        guard let url = endPoint.url else { throw NetworkError.urlError }
         
         var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -537,7 +460,6 @@ class UserClient {
         guard let response = try? JSONDecoder().decode(RegisterResponse.self, from: data) else {
             throw NetworkError.decodingError
         }
-        print(response.data)
     }
     
     struct LoginResponse: Codable {
@@ -557,7 +479,7 @@ class UserClient {
     
     func login(with info: Login) async throws {
         let endPoint = Endpoint.login
-        guard let url = endPoint.Url else { throw NetworkError.urlError }
+        guard let url = endPoint.url else { throw NetworkError.urlError }
         
         var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -573,31 +495,15 @@ class UserClient {
         }
         bearerToken = response.data.token
         refreshToken = response.data.refreshToken
+        let a = decode(jwtToken: response.data.token)
+        name = a["name"] as? String ?? ""
+        email = a["email"] as? String ?? ""
+        UserDefaults.standard.setValue(name, forKey: "name")
+        UserDefaults.standard.setValue(email, forKey: "email")
         self.isValidated = true
     }
 }
 
-struct Login: Codable {
-    var id: Int?
-    let email: String
-    let password: String
-}
-
-struct Register: Codable {
-    var id: Int?
-    var name: String
-    var surname: String
-    var email: String
-    var userName: String
-    var password: String
-}
-
-struct ApiResponse: Codable {
-    let messages: [String]
-}
-
-
-    
 extension UserClient {
     func uploadMediaFile(mediaRequest: MediaRequest) async throws -> MediaResponse {
         let endPoint = Endpoint.upload(media: mediaRequest)
@@ -632,11 +538,9 @@ extension UserClient {
         request.httpBody = body
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(response)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
         }
-        print(try JSONDecoder().decode(MediaResponse.self, from: data))
         return try JSONDecoder().decode(MediaResponse.self, from: data)
         
     }

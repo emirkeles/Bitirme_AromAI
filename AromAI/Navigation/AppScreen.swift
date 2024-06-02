@@ -17,21 +17,8 @@ enum AppScreen: Codable, Hashable, Identifiable, CaseIterable {
 }
 
 extension AppScreen {
-    @ViewBuilder
-    var label: some View {
-        switch self {
-        case .recipes:
-            Label("Recipes", systemImage: "fork.knife.circle")
-        case .ai:
-            Label("AromAI", systemImage: "face.smiling.fill")
-        case .myRecipes:
-            Label("My Recipes", systemImage: "frying.pan.fill")
-        case .account:
-            Label("Account", systemImage: "person.crop.circle")
-        }
-    }
     
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
         case .account:
             return "Profil"

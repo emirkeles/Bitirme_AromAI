@@ -8,18 +8,14 @@
 import Foundation
 import SwiftUI
 
-struct ErrorAlertEnvironmentKey: EnvironmentKey {
+private struct ErrorAlertEnvironmentKey: EnvironmentKey {
     @MainActor
-    static let defaultValue = ErrorAlert()
+    static let defaultValue: ErrorAlert = ErrorAlert()
 }
 
 extension EnvironmentValues {
     var errorAlert: ErrorAlert {
-        get {
-            return self[ErrorAlertEnvironmentKey.self]
-        }
-        set {
-            self[ErrorAlertEnvironmentKey.self] = newValue
-        }
+        get { self[ErrorAlertEnvironmentKey.self] }
+        set { self[ErrorAlertEnvironmentKey.self] = newValue }
     }
 }

@@ -9,12 +9,7 @@ import SwiftUI
 
 struct MealView: View {
     
-    @State private var meals: [Meal] = [
-        Meal(name: "Kahvaltı"),
-        Meal(name: "Öğle Yemeği"),
-        Meal(name: "Akşam Yemeği"),
-        Meal(name: "Atıştırmalık"),
-    ]
+    @State private var meals: [Meal] = Constants.meals
     @State private var selectedMeal: Meal?
     @State private var isLoading = false
     
@@ -32,6 +27,7 @@ struct MealView: View {
                 CustomProgressView()
             }
         } else {
+            
             VStack {
                 ScrollView {
                     Image(.meal1)
@@ -52,13 +48,13 @@ struct MealView: View {
                         .padding(.leading)
                     LazyVGrid(columns: columns) {
                         ForEach(meals) { meal in
-                            Text(meal.name)
+                            Text(LocalizedStringKey(stringLiteral: meal.name))
                                 .font(.caption)
                                 .minimumScaleFactor(0.8)
                                 .padding(8)
-                                .foregroundStyle(meal == selectedMeal ? .primaryColor : .black)
+                                .foregroundStyle(meal == selectedMeal ? .primaryColor : .primary)
                                 .frame(maxWidth: .infinity)
-                                .background(Capsule().fill(meal == selectedMeal ? .primaryColor.opacity(0.1) : .clear).stroke(meal == selectedMeal ? .primaryColor : .secondaryTextColor, lineWidth: 1))
+                                .background(Capsule().fill(meal == selectedMeal ? .primaryColor.opacity(0.1) : .secondary.opacity(0.1)).stroke(meal == selectedMeal ? .primaryColor : .secondaryTextColor, lineWidth: 1))
                                 .onTapGesture {
                                     withAnimation(.bouncy) {
                                         selectedMeal = (selectedMeal == meal) ? nil : meal
@@ -114,9 +110,6 @@ struct MealView: View {
 }
 
 struct CustomProgressView: View {
-    @State private var loadingText = "Yemek oluşturuluyor."
-    @State private var dotCount = 1
-    let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     
     var body: some View {
         VStack {
@@ -124,28 +117,19 @@ struct CustomProgressView: View {
                 .progressViewStyle(CircularProgressViewStyle(tint: .primaryColor))
                 .scaleEffect(2.0, anchor: .center)
                 .padding(20)
-            Text(loadingText)
+            Text("Yemek Oluşturuluyor...")
                 .font(.headline)
                 .foregroundColor(.primaryColor)
                 .padding()
                 .transition(.slide)
                 .frame(width: 220)
         }
-        .background(Color.white.opacity(0.8))
+        .background(.ultraThickMaterial)
         .cornerRadius(10)
         .padding(20)
         .shadow(radius: 10)
-        .onReceive(timer) { _ in
-            updateLoadingText()
-        }
     }
     
-    private func updateLoadingText() {
-        
-            dotCount = (dotCount % 3) + 1
-            loadingText = "Yemek oluşturuluyor" + String(repeating: ".", count: dotCount)
-        
-        }
 }
 
 
@@ -156,17 +140,17 @@ extension MealView {
         Task {
             do {
                 let recipe = try await userClient.createAiRecipe(aiRecipe: .init(
-                    cuisine: nil,
+                    cuisine: userClient.useMyInfo ? userClient.cuisines.first?.name ?? nil : nil,
                     mealType: selected.name,
                     includedIngredients: nil,
-                    excludedIngredients: nil,
-                    health: nil
+                    excludedIngredients: userClient.useMyInfo ? userClient.ingredientsNames : nil ,
+                    health: userClient.useMyInfo ? userClient.diseasesNames : nil
                 ))
                 await errorAlert.present(AromAIError.success("\(recipe.data.name) tarifi oluşturuldu."), title: "Başarılı")
                 selectedMeal = nil
                 isLoading = false
             } catch {
-                await errorAlert.present(error, title: "Başarılı")
+                await errorAlert.present(error, title: "Hata!")
                 isLoading = false
             }
         }

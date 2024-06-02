@@ -8,15 +8,7 @@
 import SwiftUI
 
 struct RegionView: View {
-    @State private var likedKitchens: [LikedKitchen] = [
-        LikedKitchen(name: "Avrupa"),
-        LikedKitchen(name: "Asya"),
-        LikedKitchen(name: "Orta Doğu"),
-        LikedKitchen(name: "Latin Amerika"),
-        LikedKitchen(name: "Afrika"),
-        LikedKitchen(name: "Türk"),
-        LikedKitchen(name: "Meksika"),
-    ]
+    @State private var likedKitchens: [LikedKitchen] = Constants.likedKitchens
     @State private var selectedKitchen: LikedKitchen?
     @Environment(\.errorAlert) private var errorAlert
     @Environment(\.userClient) private var userClient
@@ -41,6 +33,7 @@ struct RegionView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(height: 220)
+                    
                     Text("Bölge Seçin")
                         .font(.title2)
                         .fontWeight(.semibold)
@@ -54,12 +47,12 @@ struct RegionView: View {
                         .padding(.leading)
                     LazyVGrid(columns: columns) {
                         ForEach(likedKitchens) { kitchen in
-                            Text(kitchen.name)
+                            Text(LocalizedStringKey(stringLiteral: kitchen.name))
                                 .font(.caption)
-                                .foregroundStyle(selectedKitchen == kitchen ? .primaryColor : .black)
+                                .foregroundStyle(selectedKitchen == kitchen ? .primaryColor : .primary)
                                 .padding(8)
                                 .frame(maxWidth: .infinity)
-                                .background(Capsule().fill(selectedKitchen == kitchen ? .primaryColor.opacity(0.1) : .clear).stroke(selectedKitchen == kitchen ? .primaryColor : .secondaryTextColor, lineWidth: 1))
+                                .background(Capsule().fill(selectedKitchen == kitchen ? .primaryColor.opacity(0.1) : .secondary.opacity(0.1)).stroke(selectedKitchen == kitchen ? .primaryColor : .secondaryTextColor, lineWidth: 1))
                                 .onTapGesture {
                                     selectedKitchen = (selectedKitchen == kitchen) ? nil : kitchen
                                 }
@@ -90,7 +83,7 @@ struct RegionView: View {
                         .clipShape(.buttonBorder)
                 })
                 .padding(.horizontal)
-                .frame(height: .bottomTabHeight, alignment: .center)
+                .frame(height: .bottomTabHeight, alignment: .top)
             }
             
             .navigationTitle("Bölgeye Göre")
@@ -114,24 +107,36 @@ struct RegionView: View {
 
 extension RegionView {
     private func createRecipeByKitchen() {
-        isLoading = true
-        guard let selected = selectedKitchen else { return }
+        
         Task {
             do {
+                guard let selected = selectedKitchen else { throw AromAIError.custom }
+                isLoading = true
                 let recipe = try await userClient.createAiRecipe(aiRecipe: .init(
                     cuisine: selected.name,
                     mealType: nil,
                     includedIngredients: nil,
-                    excludedIngredients: nil,
-                    health: nil
+                    excludedIngredients: userClient.useMyInfo ? userClient.ingredientsNames : nil,
+                    health: userClient.useMyInfo ? userClient.diseasesNames : nil
                 ))
                 isLoading = false
                 selectedKitchen = nil
                 await errorAlert.present(AromAIError.success("\(recipe.data.name) tarifi oluşturuldu."), title: "Başarılı")
             } catch {
                 isLoading = false
-                await errorAlert.present(error, title: "Hata")
+                await errorAlert.present(error)
             }
         }
     }
+}
+
+#Preview {
+    RegionView()
+        .preferredColorScheme(.light)
+}
+
+
+#Preview {
+    RegionView()
+        .preferredColorScheme(.dark)
 }

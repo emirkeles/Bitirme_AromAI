@@ -9,7 +9,7 @@ import Foundation
 
 struct AIRecipeData: Codable {
     let data: [AIRecipe]
-    let pagination: AIPagination
+    let pagination: Pagination
 }
 
 struct AIRecipe: Codable {
@@ -18,7 +18,7 @@ struct AIRecipe: Codable {
     let createdAt: String
     let name: String
     let description: String
-    let aiInstructions: [AIInstruction]
+    let aiInstructions: [RecipeStep]
     let preparationTime: Double
     let servings: Double
     let calories: Double
@@ -26,11 +26,6 @@ struct AIRecipe: Codable {
     let fat: Double
     let carbohydrates: Double
     let aiIngredients: [AIIngredient]
-}
-
-struct AIInstruction: Codable {
-    let stepNumber: Int
-    let description: String
 }
 
 struct AIIngredient: Codable {
@@ -42,11 +37,4 @@ struct AIIngredient: Codable {
     let carbohydrates: Double
     let quantityType: String
     let quantity: Double
-}
-
-struct AIPagination: Codable {
-    let pageNumber: Int
-    let pageSize: Int
-    let totalPages: Int
-    let totalRecords: Int
 }

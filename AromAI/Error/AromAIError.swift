@@ -21,6 +21,7 @@ enum AromAIError: LocalizedError {
         }
     }
 }
+
 @MainActor
 final class ErrorAlert: ObservableObject {
 

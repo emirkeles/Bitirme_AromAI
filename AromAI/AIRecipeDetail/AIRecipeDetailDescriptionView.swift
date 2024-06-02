@@ -31,7 +31,3 @@ struct AIRecipeDetailDescriptionView: View {
         }
     }
 }
-
-//#Preview {
-//    AIRecipeDetailDescriptionView(recipe: .init(id: "123123", userId: "123123123", createdAt: "123123123", name: "Emir Keleş", description: "Yemek", aiInstructions: [.init(stepNumber: 1, description: "asdfasdf")], preparationTime: 3, servings: 2, calories: 45, protein: 46, fat: 34, carbohydrates: 34, aiIngredients: [.init(name: "name", description: "descp", calories: 35, protein: 45, fat: 23, carbohydrates: 51, quantityType: "Adet", quantity: 2)]))
-//}

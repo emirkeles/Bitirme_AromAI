@@ -142,9 +142,9 @@ private extension LikedKitchenView {
             HStack {
                 ForEach(1...3, id: \.self) { step in
                     Circle()
-                        .stroke(step == 3 ? Color.red : Color.gray, lineWidth: 1)
+                        .stroke(step == 3 ? .primaryColor : .secondary, lineWidth: 1)
                         .frame(width: 20, height: 20)
-                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 3 ? .red : .gray))
+                        .overlay(Text("\(step)").font(.system(size: 14)).foregroundStyle(step == 3 ? .primaryColor : .secondary))
                 }
             }
         }
@@ -169,7 +169,7 @@ private struct KitchenItemView: View {
     let onTap: () -> Void
     
     var body: some View {
-        Text(kitchen.name)
+        Text(LocalizedStringKey(kitchen.name))
             .font(.caption)
             .minimumScaleFactor(0.8)
             .padding(8)

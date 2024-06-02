@@ -6,12 +6,14 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct Slide: Identifiable {
     var id = UUID()
-    var title: String
+    var title: LocalizedStringKey
     var image: String
-    var buttonText: String
+    var buttonText: LocalizedStringKey
+    
 }
 
 let slideData: [Slide] = [

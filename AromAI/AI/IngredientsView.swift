@@ -7,21 +7,16 @@
 
 import SwiftUI
 
+extension LocalizedStringKey {
+    var stringKey: String? {
+        Mirror(reflecting: self).children.first(where: { $0.label == "key" })?.value as? String
+    }
+}
+
 struct IngredientsView: View {
-    @State private var allergies: [Allergy] = [
-        Allergy(name: "🍅 Domates"),
-        Allergy(name: "🍎 Elma"),
-        Allergy(name: "🥕 Havuç"),
-        Allergy(name: "🍌 Muz"),
-        Allergy(name: "🍐 Armut"),
-        Allergy(name: "🍋 Limon"),
-        Allergy(name: "🍊 Portakal"),
-        Allergy(name: "🍉 Karpuz"),
-        Allergy(name: "🍓 Çilek"),
-    ]
+    @State private var allergies: [Allergy] = Constants.allergies
     @State private var selectedAllergies: [Allergy] = []
     @State private var isLoading = false
-    
     @State private var showingAddIngredientAlert = false
     @State private var newIngredientName = ""
     @Environment(\.errorAlert) private var errorAlert
@@ -57,14 +52,14 @@ struct IngredientsView: View {
                         .padding(.leading)
                     LazyVGrid(columns: columns) {
                         ForEach(allergies) { allergy in
-                            Text(allergy.name)
+                            Text(LocalizedStringKey(stringLiteral: allergy.name))
                                 .font(.caption)
                                 .minimumScaleFactor(0.8)
                                 .padding(8)
-                                .foregroundStyle(selectedAllergies.contains(allergy) ? .primaryColor : .black)
+                                .foregroundStyle(selectedAllergies.contains(allergy) ? .primaryColor : .primary)
                                 .fontWeight(selectedAllergies.contains(allergy) ? .semibold : nil)
                                 .frame(maxWidth: .infinity)
-                                .background(Capsule().fill(selectedAllergies.contains(allergy) ? .primaryColor.opacity(0.1) : .clear).stroke(selectedAllergies.contains(allergy) ? .primaryColor : .secondaryTextColor, lineWidth: 1))
+                                .background(Capsule().fill(selectedAllergies.contains(allergy) ? .primaryColor.opacity(0.1) : .secondary.opacity(0.1)).stroke(selectedAllergies.contains(allergy) ? .primaryColor : .secondaryTextColor, lineWidth: 1))
                                 .onTapGesture {
                                     if let index = selectedAllergies.firstIndex(of: allergy) {
                                         selectedAllergies.remove(at: index)
@@ -132,15 +127,17 @@ extension IngredientsView {
                         cuisine: nil,
                         mealType: nil,
                         includedIngredients: selectedIngredientNames,
-                        excludedIngredients: nil,
-                        health: nil
+                        excludedIngredients: userClient.useMyInfo ? userClient.ingredientsNames : nil,
+                        health: userClient.useMyInfo ? userClient.diseasesNames : nil
                     ))
                 await errorAlert.present(AromAIError.success("\(recipe.data.name) tarifi oluşturuldu."), title: "Başarılı")
                 isLoading = false
                 selectedAllergies = []
             } catch {
+                selectedAllergies = []
                 await errorAlert.present(error, title: "Hata")
                 isLoading = false
+                
             }
         }
     }
