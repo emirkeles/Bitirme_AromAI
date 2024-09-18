@@ -1,7 +1,43 @@
 # AromAI
-Evinde bulunan ürünleri, favori mutfağını gir. Yapay zeka senin için tarif oluştursun! AromAI alerjin olan ürünleri ve takip ettiğin yeme alışkanlığını dikkate alarak yemek tarifi verir. Diğer kullanıcılar için kendi tariflerini ekleyebilirsin!
+ Enter the products you have at home, your favorite cuisine. Let **AI** create a recipe for you! **AromAI** gives you a recipe by taking into account the products you are allergic to and the eating habits you follow. You can add your own recipes for other users!
 
-# Ekran Görüntüleri
+## Features
+
+- User Authentication: Sign-in and sign-up functionality
+- Onboarding: Introductory slides for new users
+- Recipe Management: View, create, and manage recipes
+- AI Integration: AI-powered recipe suggestions
+- Personalization: User preferences and dietary restrictions
+- Multi-language Support: Localization ready
+
+## Technical Highlights
+
+- **SwiftUI**: The entire UI is built using SwiftUI, Apple's modern declarative UI framework
+- **Combine**: Used for reactive programming and handling asynchronous events
+- **Environment Values**: Custom environment keys for dependency injection
+- **[MV Architecture](https://github.com/onl1ner/swiftui-mv-architecture.git)**: Clear separation of concerns with Model-View
+- **Async/Await**: Modern concurrency model for handling asynchronous operations
+- **Custom Networking Layer**: A robust networking layer for API communication
+- **Custom Error Handling**: Centralized error management and presentation
+- **Custom UI Components**: Reusable UI components like CustomSearchBar, CapsulePicker, etc.
+- **Tab-based Navigation**: Custom tab view for main app navigation
+- **Localization**: Support for multiple languages using .xcstrings
+- **UserDefaults**: For storing user preferences and app state
+- **Custom Property Wrappers**: Like @DebouncedState for optimized state management
+
+## Getting Started
+
+1. Clone the repository
+2. Open `AromAI.xcodeproj` in Xcode
+3. Build and run the project on a simulator or physical device
+
+## Requirements
+
+- iOS 17.2+
+- Xcode 15.2+
+- Swift 5.0+
+
+# Screenshots
 <p>
   <img src="https://github.com/user-attachments/assets/6c9af5c7-215f-4c07-bd3c-ea25be9361e6" width="260" alt="ss1" />
   &nbsp
@@ -23,3 +59,6 @@ Evinde bulunan ürünleri, favori mutfağını gir. Yapay zeka senin için tarif
 
 # App Store
 ![qr-code Small](https://github.com/user-attachments/assets/a61f3b6e-f97e-4eaa-ac51-b112ae622707)
+
+
+
