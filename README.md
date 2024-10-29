@@ -23,7 +23,6 @@
 - **Tab-based Navigation**: Custom tab view for main app navigation
 - **Localization**: Support for multiple languages using .xcstrings
 - **UserDefaults**: For storing user preferences and app state
-- **Custom Property Wrappers**: Like @DebouncedState for optimized state management
 
 ## Getting Started
 
